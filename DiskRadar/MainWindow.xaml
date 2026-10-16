@@ -1,0 +1,183 @@
+﻿<Window x:Class="DiskRadar.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:DiskRadar"
+        Title="Disk Radar" Height="800" Width="1320" FontFamily="Segoe UI" FontSize="13"
+        WindowStartupLocation="CenterScreen">
+    <DockPanel Margin="10">
+        <!-- Top bar -->
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8" LastChildFill="False">
+            <TextBlock Text="Konum:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <ComboBox x:Name="DriveBox" Width="300" VerticalAlignment="Center"/>
+            <Button x:Name="PickBtn" Content="Klasör seç…" Margin="6,0,0,0" Padding="10,4" Click="Pick_Click"/>
+            <Button x:Name="ScanBtn" Content="Tara" Margin="6,0,0,0" Padding="18,4" FontWeight="SemiBold" Click="Scan_Click"/>
+            <Button x:Name="CancelBtn" Content="Durdur" Margin="6,0,0,0" Padding="10,4" IsEnabled="False" Click="Cancel_Click"/>
+            <Button Content="Bu listeyi CSV'ye aktar" Margin="6,0,0,0" Padding="10,4" Click="Export_Click"/>
+            <ComboBox x:Name="ThemeBox" DockPanel.Dock="Right" Width="100" VerticalAlignment="Center" SelectionChanged="Theme_Changed">
+                <ComboBoxItem>Sistem</ComboBoxItem>
+                <ComboBoxItem>Açık</ComboBoxItem>
+                <ComboBoxItem>Koyu</ComboBoxItem>
+            </ComboBox>
+            <TextBlock DockPanel.Dock="Right" Text="Tema:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+        </DockPanel>
+
+        <Border x:Name="Banner" DockPanel.Dock="Top" Background="#FFF8E1" BorderBrush="#FFE082" BorderThickness="1"
+                CornerRadius="4" Padding="8,5" Margin="0,0,0,8">
+            <TextBlock x:Name="BannerText" TextWrapping="Wrap" Foreground="#333"/>
+        </Border>
+
+        <!-- Legend -->
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,6,0,0">
+            <Border Background="#E57373" Width="14" Height="14" CornerRadius="3"/><TextBlock Text=" Sistem – dokunma" Margin="0,0,16,0"/>
+            <Border Background="#FFD54F" Width="14" Height="14" CornerRadius="3"/><TextBlock Text=" Program – Ayarlar'dan kaldır" Margin="0,0,16,0"/>
+            <Border Background="#81C784" Width="14" Height="14" CornerRadius="3"/><TextBlock Text=" Silinebilir" Margin="0,0,16,0"/>
+            <Border Background="#90A4AE" Width="14" Height="14" CornerRadius="3"/><TextBlock Text=" Kişisel – karar senin" Margin="0,0,16,0"/>
+            <Border Background="#B0BEC5" Width="14" Height="14" CornerRadius="3"/><TextBlock Text=" Bilinmiyor" Margin="0,0,16,0"/>
+            <TextBlock Text="Sağ tık: klasörü aç / Explorer'da göster (silme işlemini oradan siz yaparsınız)" Foreground="Gray"/>
+        </StackPanel>
+
+        <!-- Status line -->
+        <DockPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+            <ProgressBar x:Name="ScanProgress" Width="220" Height="12" Margin="0,0,10,0" Visibility="Collapsed" DockPanel.Dock="Left"/>
+            <TextBlock x:Name="StatusText" VerticalAlignment="Center" Foreground="Gray" TextTrimming="CharacterEllipsis"/>
+        </DockPanel>
+
+        <TabControl x:Name="Tabs">
+            <TabItem Header="Gezgin">
+                <DockPanel Margin="6">
+                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                        <Button x:Name="UpBtn" Content="⬆ Yukarı" Padding="10,3" Click="Up_Click" DockPanel.Dock="Left"/>
+                        <ComboBox x:Name="FilterBox" DockPanel.Dock="Right" Width="230" SelectedIndex="0" SelectionChanged="Filter_Changed">
+                            <ComboBoxItem>Hepsini göster</ComboBoxItem>
+                            <ComboBoxItem>Sadece silinebilirler</ComboBoxItem>
+                            <ComboBoxItem>1 yıldır kullanılmayanlar</ComboBoxItem>
+                            <ComboBoxItem>Sadece klasörler</ComboBoxItem>
+                            <ComboBoxItem>Sadece dosyalar</ComboBoxItem>
+                            <ComboBoxItem>Sistem dosyalarını gizle</ComboBoxItem>
+                        </ComboBox>
+                        <TextBlock DockPanel.Dock="Right" Text="Filtre:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock x:Name="PathText" VerticalAlignment="Center" Margin="10,0,10,0" FontWeight="SemiBold"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </DockPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="3*"/>
+                            <ColumnDefinition Width="6"/>
+                            <ColumnDefinition Width="2*"/>
+                        </Grid.ColumnDefinitions>
+                        <DataGrid x:Name="ExplorerGrid" Grid.Column="0"/>
+                        <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" Background="Transparent"/>
+                        <Border Grid.Column="2" BorderBrush="Gray" BorderThickness="1">
+                            <local:Treemap x:Name="Map"/>
+                        </Border>
+                    </Grid>
+                </DockPanel>
+            </TabItem>
+            <TabItem Header="Temizlenebilir alanlar">
+                <DockPanel Margin="6">
+                    <TextBlock DockPanel.Dock="Top" Margin="0,0,0,6" TextWrapping="Wrap">
+                        <Run x:Name="CleanTotal" FontWeight="SemiBold"/>
+                        <Run Foreground="Gray" Text="  Çift tık / sağ tık → klasörü aç. 'Açıklama' sütunu nasıl temizleneceğini söyler. Windows'un kendi alanları için: Başlat → 'Disk Temizleme' → 'Sistem dosyalarını temizle'."/>
+                    </TextBlock>
+                    <DataGrid x:Name="CleanGrid"/>
+                </DockPanel>
+            </TabItem>
+            <TabItem Header="Dosya türleri">
+                <Grid Margin="6">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="6"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Disk hangi tür dosyalarla dolu? Bir türe tıklayın, o türün en büyük dosyaları altta listelenir." Foreground="Gray" Margin="0,0,0,6"/>
+                    <DataGrid x:Name="TypesGrid" Grid.Row="1" SelectionChanged="Types_SelectionChanged"/>
+                    <GridSplitter Grid.Row="2" HorizontalAlignment="Stretch" Background="Transparent"/>
+                    <TextBlock x:Name="TypeFilesText" Grid.Row="3" FontWeight="SemiBold" Margin="0,6,0,6"/>
+                    <DataGrid x:Name="TypeFilesGrid" Grid.Row="4"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Projeler">
+                <Grid Margin="6">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="6"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" TextWrapping="Wrap" Margin="0,0,0,6">
+                        <Run x:Name="ProjectTotal" FontWeight="SemiBold"/>
+                        <Run Foreground="Gray" Text="  Yazılım projeleri (.NET, Node.js, Java, Python…) ve içlerindeki yeniden oluşturulabilir klasörler (bin, obj, node_modules…). Bir projeye tıklayın."/>
+                    </TextBlock>
+                    <DataGrid x:Name="ProjectsGrid" Grid.Row="1" SelectionChanged="Projects_SelectionChanged"/>
+                    <GridSplitter Grid.Row="2" HorizontalAlignment="Stretch" Background="Transparent"/>
+                    <TextBlock x:Name="ProjectPartsText" Grid.Row="3" FontWeight="SemiBold" Margin="0,6,0,6"/>
+                    <DataGrid x:Name="ProjectPartsGrid" Grid.Row="4"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="En büyük dosyalar">
+                <DataGrid x:Name="BigGrid" Margin="6"/>
+            </TabItem>
+            <TabItem Header="Uzun süredir kullanılmayanlar">
+                <DockPanel Margin="6">
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,6">
+                        <TextBlock Text="En az" VerticalAlignment="Center"/>
+                        <ComboBox x:Name="DaysBox" Width="110" Margin="6,0" SelectedIndex="2" SelectionChanged="Unused_Changed">
+                            <ComboBoxItem Tag="90">3 ay</ComboBoxItem>
+                            <ComboBoxItem Tag="180">6 ay</ComboBoxItem>
+                            <ComboBoxItem Tag="365">1 yıl</ComboBoxItem>
+                            <ComboBoxItem Tag="730">2 yıl</ComboBoxItem>
+                            <ComboBoxItem Tag="1825">5 yıl</ComboBoxItem>
+                        </ComboBox>
+                        <TextBlock Text="dokunulmamış, 50 MB'tan büyük klasör ve dosyalar." VerticalAlignment="Center"/>
+                        <TextBlock x:Name="UnusedTotal" VerticalAlignment="Center" Margin="12,0,0,0" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <DataGrid x:Name="UnusedGrid"/>
+                </DockPanel>
+            </TabItem>
+            <TabItem Header="Kopya dosyalar">
+                <DockPanel Margin="6">
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,6">
+                        <Button x:Name="DupBtn" Content="Kopyaları bul" Padding="14,3" Click="Dup_Click"/>
+                        <TextBlock x:Name="DupText" VerticalAlignment="Center" Margin="10,0,0,0"
+                                   Text="İçeriği birebir aynı olan 1 MB'tan büyük dosyaları bulur (sistem dosyaları hariç). Büyük diskte birkaç dakika sürebilir."/>
+                    </StackPanel>
+                    <DataGrid x:Name="DupGrid"/>
+                </DockPanel>
+            </TabItem>
+            <TabItem Header="Yüklü programlar">
+                <DockPanel Margin="6">
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,6">
+                        <Button Content="Ayarlar &gt; Uygulamalar'ı aç" Padding="12,3" Click="OpenAppsSettings_Click"/>
+                        <TextBlock VerticalAlignment="Center" Margin="10,0,0,0" Foreground="Gray" TextWrapping="Wrap"
+                                   Text="Program kaldırmak için Ayarlar'ı kullanın. 'Son kullanım' program klasöründeki en yeni dosya tarihidir (tahmini)."/>
+                    </StackPanel>
+                    <DataGrid x:Name="AppsGrid"/>
+                </DockPanel>
+            </TabItem>
+            <TabItem Header="Değişimler">
+                <DockPanel Margin="6">
+                    <Border DockPanel.Dock="Top" Height="190" BorderBrush="Gray" BorderThickness="1" CornerRadius="4" Margin="0,0,0,8" Padding="4">
+                        <local:ChangeChart x:Name="Chart"/>
+                    </Border>
+                    <TextBlock x:Name="ChangeText" DockPanel.Dock="Top" Margin="0,0,0,6" FontWeight="SemiBold" TextWrapping="Wrap"
+                               Text="Her taramada klasör boyutları kaydedilir; aynı yer tekrar tarandığında burada farklar görünür."/>
+                    <DataGrid x:Name="ChangeGrid"/>
+                </DockPanel>
+            </TabItem>
+            <TabItem Header="Ara">
+                <DockPanel Margin="6">
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,6">
+                        <TextBox x:Name="SearchBox" Width="320" Padding="4,3" KeyDown="SearchBox_KeyDown"/>
+                        <Button Content="Ara" Padding="14,3" Margin="6,0,0,0" Click="Search_Click"/>
+                        <TextBlock Text="Dosya veya klasör adının bir kısmını yazın (ör. .iso, setup, backup)" Foreground="Gray"
+                                   VerticalAlignment="Center" Margin="10,0,0,0"/>
+                    </StackPanel>
+                    <DataGrid x:Name="SearchGrid"/>
+                </DockPanel>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>
