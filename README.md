@@ -1,3 +1,5 @@
+<img src="DiskRadar/Assets/app-icon.png" width="96" alt="Disk Radar icon">
+
 # Disk Radar
 
 **English** · [Türkçe](README.tr.md)
