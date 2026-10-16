@@ -16,10 +16,13 @@ public static class SafetyRules
     public static void Classify(Node n, Node? parent)
     {
         var p = n.FullPath.TrimEnd('\\').ToLowerInvariant();
-        var name = n.Name.ToLowerInvariant();
+        // The scan root's Name is its full path, so take the last segment of the path instead
+        var name = Path.GetFileName(p) is { Length: > 0 } last ? last : n.Name.ToLowerInvariant();
         var parentPath = Path.GetDirectoryName(p) ?? "";
-        bool atRoot = parent != null && parent.Parent == null && parent.FullPath.Length <= 3;
+        bool atRoot = parentPath.Length == 3;   // directly under a drive root like "c:\", whatever folder was scanned
         bool underUsers = p.Contains(@"\users\");
+        // e.g. Program Files\nodejs\node_modules is npm itself, not a project's dependencies
+        bool insideInstalled = parent?.Safety is Safety.Program or Safety.System;
 
         (Safety s, string note)? r = null;
 
@@ -59,9 +62,9 @@ public static class SafetyRules
             r = (Safety.Cleanable, "İnternet önbelleği. Silinebilir.");
         else if (underUsers && n.IsDir && CacheNames.Contains(name))
             r = (Safety.Cleanable, "Uygulama önbelleği. İlgili program kapalıyken silinebilir; gerekirse yeniden oluşur.");
-        else if (n.IsDir && name == "node_modules")
+        else if (!insideInstalled && n.IsDir && name == "node_modules")
             r = (Safety.Cleanable, "npm paketleri. Proje klasöründe 'npm install' ile yeniden oluşturulur.");
-        else if (n.IsDir && name == ".vs")
+        else if (!insideInstalled && n.IsDir && name == ".vs")
             r = (Safety.Cleanable, "Visual Studio geçici verileri. Silinebilir.");
         else if (underUsers && (p.EndsWith(@"\.nuget\packages") || p.EndsWith(@"\.gradle\caches") ||
                                 p.EndsWith(@"\appdata\local\npm-cache") || p.EndsWith(@"\pip\cache") ||

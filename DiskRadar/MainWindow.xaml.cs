@@ -306,8 +306,8 @@ public partial class MainWindow : Window
     {
         BasicGrid(g);
 
-        g.Columns.Add(Col("Ad", "DisplayName", new DataGridLength(2, DataGridLengthUnitType.Star)));
-        if (showPath) g.Columns.Add(Col("Konum", "ParentPath", new DataGridLength(2, DataGridLengthUnitType.Star)));
+        g.Columns.Add(Col("Ad", "DisplayName", new DataGridLength(showPath ? 220 : 230)));
+        if (showPath) g.Columns.Add(Col("Konum", "ParentPath", new DataGridLength(280)));
         g.Columns.Add(Col("Boyut", "SizeText", new DataGridLength(90), "SizeValue", right: true));
         if (!showPath)
         {
@@ -328,7 +328,7 @@ public partial class MainWindow : Window
             Header = "Durum", Binding = new Binding("SafetyText"), Width = new DataGridLength(115),
             SortMemberPath = "SafetyText", ElementStyle = pill,
         });
-        g.Columns.Add(Col("Açıklama", "Note", new DataGridLength(3, DataGridLengthUnitType.Star)));
+        g.Columns.Add(Col("Açıklama", "Note", new DataGridLength(480)));
 
         g.MouseDoubleClick += (_, _) =>
         {
@@ -363,9 +363,9 @@ public partial class MainWindow : Window
         };
     }
 
-    static DataGridTextColumn Col(string header, string path, DataGridLength width, string? sort = null, bool right = false)
+    static DataGridTextColumn Col(string header, string path, DataGridLength width, string? sort = null, bool right = false, double minWidth = 0)
     {
-        var c = new DataGridTextColumn { Header = header, Binding = new Binding(path) { Mode = BindingMode.OneWay }, Width = width, SortMemberPath = sort ?? path };
+        var c = new DataGridTextColumn { Header = header, Binding = new Binding(path) { Mode = BindingMode.OneWay }, Width = width, SortMemberPath = sort ?? path, MinWidth = minWidth };
         var s = new Style(typeof(TextBlock));
         s.Setters.Add(new Setter(VerticalAlignmentProperty, VerticalAlignment.Center));
         if (right)

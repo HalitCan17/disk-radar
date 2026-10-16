@@ -17,7 +17,7 @@ public sealed class Node
     public Node? Parent;
     public List<Node>? Children;
     public Safety Safety;
-    public string Note = "";
+    public string Note { get; set; } = "";   // property, so the "Açıklama" column can bind to it
     public string Group { get; set; } = "";   // duplicate group label
 
     // Properties below are for data binding
@@ -56,7 +56,7 @@ public static class Palette
         return b;
     }
     // Index order matches the Safety enum
-    public static readonly Brush[] Pill = { B("#00000000"), B("#F8D7DA"), B("#FFF3CD"), B("#D4EDDA"), B("#E2E8F0") };
+    public static readonly Brush[] Pill = { B("#ECEFF1"), B("#F8D7DA"), B("#FFF3CD"), B("#D4EDDA"), B("#E2E8F0") };
     public static readonly Brush[] Map = { B("#B0BEC5"), B("#E57373"), B("#FFD54F"), B("#81C784"), B("#90A4AE") };
     public static readonly Brush[] MapFile = { B("#CFD8DC"), B("#EF9A9A"), B("#FFE082"), B("#A5D6A7"), B("#B0BEC5") };
 }

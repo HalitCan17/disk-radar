@@ -42,7 +42,7 @@
             <TextBlock x:Name="StatusText" VerticalAlignment="Center" Foreground="Gray" TextTrimming="CharacterEllipsis"/>
         </DockPanel>
 
-        <TabControl x:Name="Tabs">
+        <TabControl x:Name="Tabs" TabStripPlacement="Left">
             <TabItem Header="Gezgin">
                 <DockPanel Margin="6">
                     <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
